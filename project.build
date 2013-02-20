@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+
+<project name="jsBuild" default="build" basedir=".">
+
+  <!-- Generate the build version string -->
+  <property name="release.version" value="1.0.0"/>
+  
+  <if test="${not property::exists('build.number')}">
+    <property name="build.number" value="0"/>
+  </if>
+  <property name="build.version" value="${release.version}.${build.number}"/>
+    
+  <!-- The top level build targets -->
+  <target name="build" depends="clean,compile,minify,package" />
+
+  <!-- Clean the source tree -->
+  <target name="clean">
+    <delete>
+      <fileset>
+        <include name="Code\jsBind.js"/>
+        <include name="Code\jsBind.min.js"/>
+        <include name="Code\jsBind.d.ts"/>
+        <include name="Code\examples\js\*.js"/>
+        <include name="Code\examples\jsBind.d.ts"/>
+        <include name="Code\src\**/*.js"/>
+        <include name="Code\src\**/*.js.map"/>
+      </fileset>
+    </delete>
+
+    <delete dir="Packaging" failonerror="false" />
+
+  </target>
+  
+  <!-- Compile the code -->
+	<target name="compile" >
+
+    <exec program="tsc.exe">
+      <arg line="Code\src\jsBind.ts"/>
+      <arg line="--declaration"/>
+      <arg line="--comments"/>
+      <arg line="--target ES5"/>
+      <arg line="--out Code\jsBind.js"/>
+    </exec>
+
+    <copy file="Code\jsBind.d.ts" tofile="Code\examples\jsBind.d.ts"/>
+
+    <exec program="tsc.exe">
+      <arg line="Code\examples\calc.ts"/>
+      <arg line="--comments"/>
+      <arg line="--target ES5"/>
+      <arg line="--out Code\examples\js\calc.js"/>
+    </exec>
+
+    <exec program="tsc.exe">
+      <arg line="Code\examples\clock.ts"/>
+      <arg line="--comments"/>
+      <arg line="--target ES5"/>
+      <arg line="--out Code\examples\js\clock.js"/>
+    </exec>
+
+    <exec program="tsc.exe">
+      <arg line="Code\examples\tableDemo.ts"/>
+      <arg line="--comments"/>
+      <arg line="--target ES5"/>
+      <arg line="--out Code\examples\js\tableDemo.js"/>
+    </exec>
+  </target>
+  
+  <!-- Minify-->
+  <target name="minify" >
+
+    <exec program="Build\JsMin\jsmincmd.cmd" workingdir="Build\JsMin\">
+      <arg value="..\..\Code\jsBind.js"/>
+      <arg value="..\..\Code\jsBind.min.js"/>
+    </exec>
+
+    <echo file="temp.txt" append="true" message="/*"></echo>
+    <echo file="temp.txt" append="true" message=" * jsBind Library v${release.version}"></echo>
+    <echo file="temp.txt" append="true" message=" * http://www.js-bind.com/"></echo>
+    <echo file="temp.txt" append="true" message=" *"></echo>
+    <echo file="temp.txt" append="true" message=" * Copyright 2013 Voss Tech Ltd"></echo>
+    <echo file="temp.txt" append="true" message=" * Released under the MIT licence"></echo>
+    <echo file="temp.txt" append="true" message=" * http://www.js-bind.com/licence.html"></echo>
+    <echo file="temp.txt" append="true" message=" */"></echo>
+
+    <loadfile file="Code\jsBind.min.js" property="code"/>
+    <echo file="temp.txt" append="true" message="${code}"/>
+
+    <copy file="temp.txt" tofile="Code\examples\js\jsBind.min.js"/>
+
+    <move file="temp.txt" tofile="Code\jsBind.min.js" overwrite="true"/>
+    
+  </target>
+  
+  <!-- Build the deployment package -->
+  <target name="package" >
+
+    <delete dir="Packaging" failonerror="false" />
+    <mkdir dir="Packaging" />
+
+    <copy file="Code\jsBind.min.js" tofile="Packaging\jsBind-${release.version}.min.js"/>
+
+    <zip zipfile="Packaging\jsBind-src-${release.version}.zip">
+      <fileset basedir=".">
+        <include name="Build\**/*.*"/>
+        <include name="Code\**/*.ts"/>
+        <include name="Code\**/*.css"/>
+        <include name="Code\**/*.png"/>
+        <include name="Code\**/*.html"/>
+	<include name="Build.cmd" />
+	<include name="Clean.cmd" />
+	<include name="project.build" />
+	<include name="Readme.txt" />
+	<include name="MIT-LICENSE.txt" />
+<exclude name="Code\jsBind.ts"/>
+<exclude name="Code\jsBind.d.ts"/>
+<exclude name="Code\examples\jsBind.d.ts"/>
+      </fileset>
+    </zip>
+    
+  </target>
+
+</project>

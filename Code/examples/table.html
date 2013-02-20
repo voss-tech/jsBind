@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+	<title>jsBind · Table Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="Ben Voss"/>
+	<script src="js/jsBind.min.js"></script>
+	<script src="js/tableDemo.js"></script>
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet"/>
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+    </style>
+    <link href="css/bootstrap-responsive.css" rel="stylesheet"/>
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+  </head>
+
+  <body>
+
+    <div class="container-fluid">
+      <div class="row-fluid">
+
+	    <div class="span1"></div>
+
+        <div class="span10">
+
+		  <div id="TableDemo">
+
+            <table>
+                <thead>
+                    <td>Item</td>
+                    <td>Amount</td>
+                    <td></td>
+                </thead>
+                <tbody data-jsBind="forEach $d.items">
+                <tr>
+                    <td data-jsBind="prop:innerText=$d.value"></td>
+                    <td data-jsBind="prop:innerText=$d.amount; prop:style.color=($d.amount < 0 ? 'rgb(255,0,0)' : 'rgb(0,255,0)')"></td>
+                    <td><button data-jsBind="event:click=$p.deleteCommand($d)">Del</button></td>
+                </tr>
+                </tbody>
+            </table>
+   
+            <button data-jsBind="event:click=$d.newCommand()">Add</button>
+
+		  </div>
+
+        </div><!--/span-->
+      
+	    <div class="span1"></div>
+
+      </div><!--/row-->
+
+    </div><!--/.fluid-container-->
+	
+		<script>
+	
+			// Create the model
+			var tableDemo = new TableDemo();
+
+			// Get the root of the UI
+			var element = document.getElementById("TableDemo");
+
+			// Bind the UI to the model
+			new jsBind.Binder(element, tableDemo);
+		</script>
+
+  </body>
+</html>
