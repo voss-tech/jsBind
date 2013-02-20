@@ -1,3 +1,12 @@
+ jsBind
+========
+
+A simple and intuitive toolkit for applying data bindings to HTML5 applications and web pages. Supporting
+declarative bindings with templating as well as dependency tracking and automatic updates via data observers.
+
+http://www.js-bind.com
+
+
  Build Prerequisites
 =====================
 
