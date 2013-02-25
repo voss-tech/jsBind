@@ -100,6 +100,8 @@
 
     <copy file="Code\jsBind.min.js" tofile="Packaging\jsBind-${release.version}.min.js"/>
 
+    <copy file="Code\jsBind.d.ts" tofile="Packaging\jsBind-${release.version}.d.ts"/>
+
     <zip zipfile="Packaging\jsBind-src-${release.version}.zip">
       <fileset basedir=".">
         <include name="Build\**/*.*"/>
