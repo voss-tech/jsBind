@@ -28,14 +28,14 @@ module jsBind {
         }
 
         /**
-         * Gets the value stored at the specified index
+         * Gets the value stored at the specified index.
          */
-        public get (index: number) {
+        public get (index: number): any {
             return this._items[index];
         }
 
         /**
-         * Sets the specified value at the specified index into the collection
+         * Sets the specified value at the specified index into the collection.
          */
         public set (index: number, item: any): void {
             this._items[index] = item;
@@ -43,7 +43,7 @@ module jsBind {
         }
 
         /**
-         * Gets the number of items stored in the collection
+         * Gets the number of items stored in the collection.
          */
         public count(): number {
             return this._items.length;
@@ -66,7 +66,7 @@ module jsBind {
         }
 
         /**
-         * Executes a provided function once per array element.
+         * Executes a provided function once per collection element.
          */
         public forEach(callbackfn: (value: any, index: number, array: any[]) => void, thisArg: any): void {
             this._items.forEach(callbackfn, thisArg);
