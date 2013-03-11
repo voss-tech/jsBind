@@ -8,6 +8,12 @@ module jsBind {
     export class ObservableString extends Observable implements IObservable {
         private _value: string = null;
 
+	constructor(value: string = null) {
+            super();
+
+            this._value = value;
+	}
+
         /**
          * Gets the string value.
          */

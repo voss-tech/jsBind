@@ -8,6 +8,12 @@ module jsBind {
     export class ObservableNumber extends Observable implements IObservable {
         private _value: number = 0;
 
+	constructor(value: number = 0) {
+            super();
+
+            this._value = value;
+	}
+
         /**
          * Gets the numeric value.
          */

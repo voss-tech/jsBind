@@ -1,19 +1,22 @@
-/// <reference path="Expression.ts" />
+/// <reference path="IExpression.ts" />
 
 module jsBind {
-    export class FunctionCallExpression extends Expression {
-        private _identifier: Expression;
-        private _args: Expression[];
+    export class FunctionCallExpression implements IExpression {
+        private _identifier: IExpression;
+        private _args: IExpression[];
 
         private _identifierValue: any;
         private _argsValues: any[] = [];
         private _changeFunc: any;
 
-        constructor(identifier: Expression, args: Expression[]) {
-            super();
-
+        constructor(identifier: IExpression, args: IExpression[]) {
             this._identifier = identifier;
             this._args = args;
+        }
+
+        public dispose(): void {
+            this._identifier.dispose();
+            this._args.forEach((v, i, a) => {v.dispose()});
         }
 
         private handleIdentifierChange(v: any): void {
@@ -43,8 +46,8 @@ module jsBind {
                 var args = this._args;
                 var argsLen = this._args.length;
                 for (var i = 0; i < argsLen; i++) {
-                    // Todo - check what happens to the modified closure here.
-                    argsChange.push((v) => this.handleArgChange(i, v));
+                    var ii = i;
+                    argsChange.push((v) => this.handleArgChange(ii, v));
                 }
             }
 

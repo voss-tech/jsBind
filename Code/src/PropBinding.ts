@@ -1,26 +1,34 @@
-/// <reference path="BindingExpression.ts" />
+/// <reference path="IBinding.ts" />
+/// <reference path="IExpression.ts" />
 /// <reference path="ObservableString.ts" />
 
 module jsBind {
-    export class PropBinding {
+    export class PropBinding implements IBinding {
         private _element: any;
+        private _path: string[];
         private _dataContext: any;
         private _parentContext: any;
-        private _binding: BindingExpression;
+        private _expression: IExpression;
 
-        constructor(element: HTMLElement, binding: BindingExpression, dataContext: any, parentContext: any) {
+        constructor(element: HTMLElement, path: string[], expression: IExpression, dataContext: any, parentContext: any) {
             this._element = element;
-            this._binding = binding;
+            this._path = path;
+            this._expression = expression;
             this._dataContext = dataContext;
             this._parentContext = parentContext;
-
-            this.evaluate();
         }
 
-        private evaluate(): void {
+        public dispose(): void {
+            if (this._expression) {
+                this._expression.dispose();
+                delete this._expression;
+            }
+        }
+
+        public evaluate(): void {
             var change = (v) => this.handleChange(v);
 
-            var result = this._binding.evaluate(change, this._dataContext, this._parentContext, null);
+            var result = this._expression.eval(change, this._dataContext, this._parentContext, null);
 
             // Set the result to the property on the element
             this.handleChange(result);
@@ -28,7 +36,7 @@ module jsBind {
 
         private handleChange(result: any): void {
             // Set the result to the property on the element
-            var parts = this._binding.subKind;
+            var parts = this._path;
             var partsLen = parts.length;
             var obj = this._element;
 
@@ -55,10 +63,10 @@ module jsBind {
             } else if ((partsLen == 1) && ((parts[0] == "innerText") || (parts[0] == "textContent"))) {
                 // Firefox uses textContent instead of innerText.  We map between the two so
                 // that both properties work on all browsers
-                if (obj.innerText === undefined) {
-                    obj.textContent = result;
-                } else {
+                if (obj.innerText != undefined) {
                     obj.innerText = result;
+                } else {
+                    obj.textContent = result;
                 }
             } else {
                 for (var i = 0; i < partsLen - 1; i++) {

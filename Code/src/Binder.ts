@@ -1,14 +1,13 @@
-/// <reference path="BindingExpression.ts" />
+/// <reference path="IBinding.ts" />
 /// <reference path="ForEachBinding.ts" />
 /// <reference path="PropBinding.ts" />
 /// <reference path="EventBinding.ts" />
 /// <reference path="TemplateBinding.ts" />
 
-/// <reference path="Expression.ts" />
+/// <reference path="IExpression.ts" />
 /// <reference path="LiteralExpression.ts" />
 /// <reference path="BinaryOperatorExpression.ts" />
 /// <reference path="PreUnaryOperatorExpression.ts" />
-/// <reference path="PostUnaryOperatorExpression.ts" />
 /// <reference path="FunctionCallExpression.ts" />
 /// <reference path="VariableReferenceExpression.ts" />
 /// <reference path="DereferenceExpression.ts" />
@@ -19,149 +18,157 @@
 
 module jsBind {
     export class Binder {
+        private _bindings: IBinding[] = [];
+
         constructor(element: Node, dataContext: any, parentContext: any = null) {
             this.setup(element, dataContext, parentContext);
         }
 
+        public dispose(): void {
+            var bindings = this._bindings;
+            var len = bindings.length;
+            for (var i = 0; i < len; i++) {
+                bindings[i].dispose();
+            }
+            delete this._bindings;
+        }
+
         private setup(node: Node, dataContext: any, parentContext: any) {
-            if (node instanceof HTMLElement) {
+            var childNodesBound = false;
+
+        if (node instanceof HTMLElement) {
                 var element = <HTMLElement> node;
 
                 if (element.hasAttribute("data-jsBind")) {
                     var bindExpr = element.getAttribute("data-jsBind");
 
-                    this.parseBindings(bindExpr, element, dataContext, parentContext);
+                    childNodesBound = this.parseBindings(bindExpr, element, dataContext, parentContext);
                 }
             }
 
-            var nodes = node.childNodes;
-            var nodesLen = nodes.length;
-            for (var i = 0; i < nodesLen; i++) {
-                this.setup(nodes[i], dataContext, parentContext);
+            if (!childNodesBound) {
+                var nodes = node.childNodes;
+                var nodesLen = nodes.length;
+                for (var i = 0; i < nodesLen; i++) {
+                    this.setup(nodes[i], dataContext, parentContext);
+                }
             }
         }
 
-        private expectToken(category: SymbolCategory, name: string): void {
+        private expectToken(category: SymbolCategory, name: string): Symbol {
             if (!(this._sym.category == category) && (this._sym.name == name)) {
-                throw "Expected '" + name + "'.";
+                throw "Expected '" + name + "' at position " + this._pos + " while parsing '" + this._expr + "'.";
             }
+
+            return this.getToken();
         }
 
-        private parseBindings(expr: string, element: HTMLElement, dataContext: any, parentContext: any): BindingExpression[]{
-            var result: BindingExpression[] = [];
+        private matchIdentifier(): string {
+            if (this._sym.category != SymbolCategory.identifier) {
+                throw "Expected identifier at position " + this._pos + " while parsing '" + this._expr + "'.";
+            }
 
-            // Intialise the tokeniser
+            var name = this._sym.name;
+
+            this.getToken();
+
+            return name;
+        }
+
+        private parseBindings(expr: string, element: HTMLElement, dataContext: any, parentContext: any): bool{
+            // Initialise the tokeniser
             this._expr = expr;
             this._len = expr.length;
             this._pos = 0;
 
             this.nextChar();
-
-            // Get the first token
             this.getToken();
+
+            var template;
+            var forEach;
+            var propsAndEvents:IBinding[] = [];
 
             while (this._sym.category != SymbolCategory.eof) {
 
-                if (this._sym.category != SymbolCategory.identifier) {
-                    throw "Expected identifier";
-                }
+                var bindingType = this.matchIdentifier();
 
-                // Parse the binding kind keyword
-                switch (this._sym.name) {
+                // Parse the bindings by keyword
+                switch (bindingType) {
                     case "prop": {
-                        var tok = this.getToken();
                         this.expectToken(SymbolCategory.punctuation, ":");
 
-                        tok = this.getToken();
-                        if (tok.category != SymbolCategory.identifier) {
-                            throw "Expected identifier";
+                        var propParts: string[] = [];
+                        propParts.push(this.matchIdentifier());
+                        while ((this._sym.category == SymbolCategory.punctuation) && (this._sym.name == ".")) {
+                            this.getToken();
+
+                            propParts.push(this.matchIdentifier());
                         }
 
-                        var properties: string[] = [];
-                        do {
-                            properties.push(tok.name);
-
-                            tok = this.getToken();
-
-                            if ((tok.category == SymbolCategory.punctuation) && (tok.name == ".")) {
-                                tok = this.getToken();
-                            }
-                        } while (tok.category == SymbolCategory.identifier);
-
                         this.expectToken(SymbolCategory.operator, "=");
-                        this.getToken();
 
-                        new PropBinding(element, new BindingExpression(properties, this.parseExpression()), dataContext, parentContext);
+                        var prop = new PropBinding(element, propParts, this.parseExpression(), dataContext, parentContext);
+                        propsAndEvents.push(prop);
+                        this._bindings.push(prop);
                         break;
                     }
 
                     case "forEach": {
-                        this.getToken();
+                        this.expectToken(SymbolCategory.operator, "=");
 
-                        new ForEachBinding(element, new BindingExpression(null, this.parseExpression()), dataContext, parentContext);
+                        forEach = new ForEachBinding(element, this.parseExpression(), dataContext, parentContext);
+
+                        this._bindings.push(forEach);
+
                         break;
                     }
 
                     case "event": {
-                        var tok = this.getToken();
-                        this.expectToken(SymbolCategory.punctuation, ":")
+                        this.expectToken(SymbolCategory.punctuation, ":");
 
-                        tok = this.getToken();
-                        if (tok.category != SymbolCategory.identifier) {
-                            throw "Expected identifier";
-                        }
+                        var eventName = this.matchIdentifier();
 
-                        var eventName = tok.name;
-                        tok = this.getToken();
-                        this.expectToken(SymbolCategory.operator, "=")
+                        this.expectToken(SymbolCategory.operator, "=");
 
-                        this.getToken();
-                        new EventBinding(element, eventName, this.parseExpression(), dataContext, parentContext);
+                        var event = new EventBinding(element, eventName, this.parseExpression(), dataContext, parentContext);
+                        propsAndEvents.push(event);
+                        this._bindings.push(event);
                         break;
                     }
 
                     case "template": {
-                        var tok = this.getToken();
-                        this.expectToken(SymbolCategory.punctuation, ":")
+                        this.expectToken(SymbolCategory.punctuation, ":");
 
-                        tok = this.getToken();
-                        if (tok.category != SymbolCategory.identifier) {
-                            throw "Expected identifier";
-                        }
+                        var templateSource = this.matchIdentifier();
 
-                        var templateSource = tok.name;
-                        tok = this.getToken();
-                        this.expectToken(SymbolCategory.operator, "=")
+                        this.expectToken(SymbolCategory.operator, "=");
 
-                        this.getToken();
+                        template = new TemplateBinding(element, templateSource, this.parseExpression(), dataContext, parentContext);
 
-                        new TemplateBinding(element, templateSource, new BindingExpression(null, this.parseExpression()), dataContext, parentContext);
+                        this._bindings.push(template);
+
                         break;
                     }
 
                     default: {
-                        throw "Unexpected binding type '" + this._sym.name + "'.";
+                        throw "Unexpected binding type '" + bindingType + "' while parsing '" + expr + "'.";
                     }
                 }
 
                 this.getToken();
             }
 
-            return result;
-        }
+            if (template) {
+                template.evaluate();
+            }
 
-        private parseBindingExpression(expr: string): Expression {
-            // Intialise the tokeniser
-            this._expr = expr;
-            this._len = expr.length;
-            this._pos = 0;
+            if (forEach) {
+                forEach.evaluate();
+            }
 
-            this.nextChar();
+            propsAndEvents.forEach((v,i,a) => {v.evaluate()});
 
-            // Get the first token
-            this.getToken();
-
-            return this.parseExpression();
+            return template || forEach;
         }
 
 //#region Tokeniser
@@ -201,8 +208,7 @@ module jsBind {
             return (c >= 'a') && (c <= 'z') || (c >= 'A') && (c <= 'Z');
         }
 
-        private operators = ["++",
-            "--",
+        private operators = [
             "+",
             "-",
             "!",
@@ -323,7 +329,7 @@ module jsBind {
                         c = this.nextChar();
                     } while (this.isDecimalDigit(c));
                 } else {
-                    throw "Unexpected character after the exponent sign while parsing number.";
+                    throw("Unexpected character '" + c + "' at position " + this._pos + " while parsing number in '" + this._expr + "'.");
                 }
             }
 
@@ -335,7 +341,6 @@ module jsBind {
                 return new Symbol(parseInt(num, 10), SymbolCategory.literalNumber);
             }
         }
-
 
         private parseString() {
             var start = this._pos;
@@ -362,13 +367,10 @@ module jsBind {
 
             var c = this.nextChar();
             while (this.isLetter(c) || this.isDecimalDigit(c) || c == "_" || c == "$") {
-
                 c = this.nextChar();
             }
 
-            var identifier = this._expr.substring(start, this._pos - 1);
-
-            return identifier;
+            return this._expr.substring(start, this._pos - 1);
         }
 
         private getToken(): Symbol {
@@ -389,11 +391,11 @@ module jsBind {
             } else if ((c == "\"") || (c == "'")) {
                 return this.parseString();
             } else if (this.isLetter(c) || c == "_" || c == "$") {
-                var idenifier = this.parseIdentifier();
-                if (this.isKeyword(idenifier)) {
-                    return new Symbol(idenifier, SymbolCategory.keyword);
+                var identifier = this.parseIdentifier();
+                if (this.isKeyword(identifier)) {
+                    return new Symbol(identifier, SymbolCategory.keyword);
                 } else {
-                    return new Symbol(idenifier, SymbolCategory.identifier);
+                    return new Symbol(identifier, SymbolCategory.identifier);
                 }
             } else if (c == "\x00") {
                 return new Symbol("", SymbolCategory.eof);
@@ -404,10 +406,9 @@ module jsBind {
                 return new Symbol(c, SymbolCategory.punctuation);
             }
 
-            alert("unknown token '" + c + "'.");
-
-            return null;
+            throw("Unknown token '" + c + "' at position " + this._pos + " while parsing '" + this._expr + "'.");
         }
+
 //#endregion
 
 //#region parser
@@ -439,12 +440,7 @@ module jsBind {
 
         private _sym: Symbol;
 
-        // Expression = [ "-", "+", "*=", "+=", "/=", "*=" ] Term | Term ( "+" | "-" ) Term
-        private parseExpression(): Expression {
-            return this.parseBrackets(() => this.parseConditional());
-        }
-
-        private parseConditional(): Expression {
+        private parseExpression(): IExpression {
             var cond = this.parseOperators();
 
             if ((this._sym.category == SymbolCategory.operator) && (this._sym.name == "?")) {
@@ -453,7 +449,6 @@ module jsBind {
 
                 this.expectToken(SymbolCategory.punctuation, ":");
 
-                this.getToken();
                 var falseExpr = this.parseExpression();
 
                 return new ConditionExpression(cond, trueExpr, falseExpr);
@@ -462,11 +457,11 @@ module jsBind {
             return cond;
         }
 
-        private parseOperators(): Expression {
+        private parseOperators(): IExpression {
             return this.parseOperator(this.parseUnaryOperators(), 0);
         }
 
-        private parseUnaryOperators(): Expression {
+        private parseUnaryOperators(): IExpression {
             if ((this._sym.category == SymbolCategory.operator) && this.isUnaryPrefix(this._sym.name)) {
                 var op = this._sym.name;
                 this.getToken();
@@ -474,19 +469,10 @@ module jsBind {
                 return new PreUnaryOperatorExpression(op, this.parseUnaryOperators());
             }
 
-            var atom = this.parseAtom();
-
-            if ((this._sym.category == SymbolCategory.operator) && this.isUnaryPostfix(this._sym.name)) {
-                var op = this._sym.name;
-                this.getToken();
-
-                return new PostUnaryOperatorExpression(op, atom);
-            }
-
-            return atom;
+            return this.parseAtom();
         }
 
-        private parseOperator(left: Expression, minPrecidence: number): Expression {
+        private parseOperator(left: IExpression, minPrecidence: number): IExpression {
 
             var op = this._sym.name;
 
@@ -501,63 +487,50 @@ module jsBind {
             return left;
         }
 
-        private parseBrackets(expr: ()=>Expression) {
+        private parseAtom(): IExpression {
+            var name = this._sym.name;
 
-            /*if ((this._sym.category == SymbolCategory.other) && ((this._sym.name == "(") || (this._sym.name == "["))) {
-                //this.getToken();
-                var result = expr();
+            switch (this._sym.category) {
+                case SymbolCategory.punctuation: {
+                    if (name == "[") {
+                        this.getToken();
+                        return this.parseSubscripts(new ArrayExpression(this.parseExpressionList("]")));
+                    } else if (name == "(") {
+                        this.getToken();
 
-                this.expectToken(SymbolCategory.other, this._sym.name);
-                this.getToken();
-            } else {*/
-                return expr();
-            //}
-        }
+                        var expr = this.parseExpression();
+                        this.getToken();
 
-        private parseAtom(): Expression {
-            return this.parseBrackets(() => this.parseBracketedAtom());
-        }
-
-        private parseArray(): Expression {
-            return new ArrayExpression(this.parseExpressionList("]"));
-        }
-
-        private parseBracketedAtom(): Expression {
-
-            if (this._sym.category == SymbolCategory.punctuation) {
-                if (this._sym.name == "[") {
-                    this.getToken();
-                    return this.parseSubscripts(this.parseArray());
-                } else if (this._sym.name == "(") {
-                    this.getToken();
-                    return this.parseSubscripts(this.parseExpression());
+                        return this.parseSubscripts(expr);
+                    }
+                    break;
                 }
 
-                throw "Unexpected";
-            } else if (this._sym.category == SymbolCategory.literalNumber) {
-                var val = this._sym.name;
-                this.getToken();
+                case SymbolCategory.literalNumber: {
+                    this.getToken();
+                    return this.parseSubscripts(new LiteralExpression(name));
+                }
 
-                return this.parseSubscripts(new LiteralExpression(val));
-            } else if (this._sym.category == SymbolCategory.literalString) {
-                var val = this._sym.name;
-                this.getToken();
+                case SymbolCategory.literalString: {
+                    this.getToken();
+                    return this.parseSubscripts(new LiteralExpression(name));
+                }
 
-                return this.parseSubscripts(new LiteralExpression(val));
-            } else if (this._sym.category == SymbolCategory.identifier) {
-                var name = this._sym.name;
-                this.getToken();
-                return this.parseSubscripts(new VariableReferenceExpression(name));
-            } else if (this._sym.category == SymbolCategory.keyword) {
-                var name = this._sym.name;
-                this.getToken();
-                return this.parseSubscripts(new KeywordExpression(name));
+                case SymbolCategory.identifier: {
+                    this.getToken();
+                    return this.parseSubscripts(new VariableReferenceExpression(name));
+                }
+
+                case SymbolCategory.keyword: {
+                    this.getToken();
+                    return this.parseSubscripts(new KeywordExpression(name));
+                }
             }
 
-            throw "Unexpected";
+            throw "Unexpected symbol '" + name + "' while parsing " + this._expr;
         }
 
-        private parseSubscripts(left: Expression) {
+        private parseSubscripts(left: IExpression): IExpression {
             var type = this._sym.name;
 
             if (type == ".") {
@@ -571,6 +544,7 @@ module jsBind {
                 this.getToken();
 
                 var expr = this.parseExpression();
+                this.getToken();
                 return this.parseSubscripts(new ArrayIndexExpression(left, expr));
             } else if (type == "(") {
                 // Function call
@@ -584,9 +558,15 @@ module jsBind {
             return left;
         }
 
-        private parseExpressionList(endChar: string): Expression[] {
-            var args: Expression[] = [];
-            while (this._sym.name != endChar) {
+        private parseExpressionList(endChar: string): IExpression[] {
+            var args: IExpression[] = [];
+
+            if (this._sym.name == endChar) {
+               this.getToken();
+               return args;
+            }
+
+            while (true) {
                 args.push(this.parseExpression());
 
                 // Consume the comma
@@ -594,12 +574,10 @@ module jsBind {
                     this._sym = this.getToken();
                 } else {
                     this.expectToken(SymbolCategory.punctuation, endChar);
+
+                    return args;
                 }
             }
-
-            this.getToken();
-
-            return args;
         }
 
 //#endregion

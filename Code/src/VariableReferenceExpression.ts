@@ -1,13 +1,14 @@
-/// <reference path="Expression.ts" />
+/// <reference path="IExpression.ts" />
 
 module jsBind {
-    export class VariableReferenceExpression extends Expression {
+    export class VariableReferenceExpression implements IExpression {
         private _name: string;
 
         constructor(name: string) {
-            super();
-
             this._name = name;
+        }
+
+        public dispose() {
         }
 
         public eval(changeFunc: any, d: any, p: any, e: any): any {

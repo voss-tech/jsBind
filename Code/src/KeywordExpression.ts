@@ -1,15 +1,10 @@
-/// <reference path="Expression.ts" />
+/// <reference path="IExpression.ts" />
 
 module jsBind {
-    export class KeywordExpression extends Expression {
-        private _keyword: any;
+    export class KeywordExpression implements IExpression {
         private _keywordValue: any;
 
         constructor(keyword: string) {
-            super();
-
-            this._keyword = keyword;
-
             switch (keyword) {
                 case "true": {
                     this._keywordValue = true;
@@ -30,8 +25,11 @@ module jsBind {
             }
         }
 
+        public dispose(): void {
+        }
+
         public eval(changeFunc: any, d: any, p: any, e: any): any {
-            return this._keyword;
+            return this._keywordValue;
         }
     }
 }

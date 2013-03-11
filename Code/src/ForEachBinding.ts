@@ -1,41 +1,79 @@
-/// <reference path="BindingExpression.ts"/>
+/// <reference path="IBinding.ts" />
+/// <reference path="IExpression.ts"/>
 /// <reference path="ObservableCollection.ts"/>
 /// <reference path="Binder.ts"/>
 
 module jsBind {
-    export class ForEachBinding {
-        private _bindingExpression: BindingExpression;
+    export class ForEachBinding implements IBinding {
         private _element: HTMLElement;
+        private _expression: IExpression;
         private _contentTemplate: Node[] = [];
         private _observable: ObservableCollection;
         private _dataContext: any;
+        private _parentContext: any;
+        private _binders: Binder[] = [];
+        private _handleCollectionChange: (a,b,c,d,e,f) => void;
 
-        constructor(element: HTMLElement, bindingExpression: BindingExpression, dataContext: any, parentContext: any) {
-            this._bindingExpression = bindingExpression;
+        constructor(element: HTMLElement, expression: IExpression, dataContext: any, parentContext: any) {
             this._element = element;
+            this._expression = expression;
             this._dataContext = dataContext;
+            this._parentContext = parentContext;
+        }
+
+        public dispose(): void {
+            this.clearBinders();
+
+            if (this._expression) {
+               this._expression.dispose();
+               delete this._expression;
+            }
+        }
+
+        public evaluate() {
+
+            this._handleCollectionChange = (i, ix, u, ux, d, dx) => this.handleCollectionChange(i, ix, u, ux, d, dx);
 
             // Take a copy of all the child nodes and store as the template
-            var childNodes = element.childNodes;
+            var childNodes = this._element.childNodes;
             var len = childNodes.length;
-            for (i = 0; i < len; i++) {
+            for (var i = 0; i < len; i++) {
                 this._contentTemplate.push(childNodes[i].cloneNode(true));
             }
 
-            // Clear the nodes
-            element.innerHTML = "";
-
             // Evaluate the binding
-            var result = this._bindingExpression.evaluate(null, dataContext, parentContext, null);
+            var changeFunc = (v) => this.handleChange(v);
+            var result = this._expression.eval(changeFunc, this._dataContext, this._parentContext, null);
+
+            this.handleChange(result);
+        }
+
+        private _prevResult: any;
+
+        private handleChange(result: any): void {
+            // Ignore if the value has not really changed
+            if (this._prevResult == result) {
+                return;
+            }
+
+            // Unhook the change notification on any previous value
+            if (this._observable) {
+                this._observable.removeCollectionObserver(this._handleCollectionChange);
+                delete this._observable;
+            }
+
+            // Clear any existing items
+            this.clearBinders();
+            this._element.innerHTML = "";
 
             // If we have an observable collection hook the change notification
             if (result instanceof ObservableCollection) {
                 var observable = <ObservableCollection>result;
 
-                observable.addCollectionObserver((i, ix, u, ux, d, dx) => this.handleCollectionChange(i, ix, u, ux, d, dx));
+                observable.addCollectionObserver(this._handleCollectionChange);
                 this._observable = observable;
 
-                // Perform the inital add of all items
+                // Perform the initial add of all items
                 var count = this._observable.count();
                 for (var i = 0; i < count; i++) {
                     this.insertItem(this._observable.get(i), i);
@@ -43,10 +81,22 @@ module jsBind {
             } else if (result instanceof Array) {
                 var array = <Array>result;
 
-                len = array.length;
+                var len = array.length;
                 for (var i = 0; i < len; i++) {
                     this.insertItem(result[i], i);
                 }
+            }
+        }
+
+        private clearBinders() {
+            var binders = this._binders;
+            if (binders) {
+                var i = binders.length;
+                while (i > 0) {
+                    binders[--i].dispose();
+                }
+
+                this._binders = [];
             }
         }
 
@@ -66,8 +116,11 @@ module jsBind {
                 // Append it to the visual tree
                 if (i * listCount + j >= elementChildNodes.length) {
                     element.appendChild(clone);
+                    this._binders.push(binder);
                 } else {
-                    element.insertBefore(clone, elementChildNodes.item(i * listCount + j));
+                    var index = i * listCount + j;
+                    element.insertBefore(clone, elementChildNodes.item(index));
+                    this._binders.splice(index, 0, binder);
                 }
             }
         }
@@ -81,7 +134,15 @@ module jsBind {
                 // Bind it
                 var binder = new Binder(clone, dataItem, this._dataContext);
 
-                this._element.replaceChild(clone, this._element.childNodes.item(i * listCount + j));
+                var index = i * listCount + j;
+
+                // Unbind the current element
+                this._binders[index].dispose();
+
+                // Replace the current element in the visual tree
+                this._element.replaceChild(clone, this._element.childNodes.item(index));
+
+                this._binders[index] = binder;
             }
         }
 
@@ -91,7 +152,14 @@ module jsBind {
             // Delete backwards to maintain the index position in the list and leave fewer items
             // to shuffle up the array each time
             for (var j = listCount - 1; j >= 0; j--) {
-                this._element.removeChild(this._element.childNodes.item(i * listCount + j));
+                var index = i * listCount + j;        
+
+                // Unbind the element
+                this._binders[index].dispose();
+                this._binders.splice(index, 1);
+
+                // Remove from the visual tree
+                this._element.removeChild(this._element.childNodes.item(index));
             }
         }
 
@@ -112,8 +180,6 @@ module jsBind {
             for (var i = 0; i < count; i++) {
                 this.updateItem(updated[i], updatedIndex + i);
             }
-
         }
-
     }
 }

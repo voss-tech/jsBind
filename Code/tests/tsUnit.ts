@@ -74,13 +74,50 @@ module tsUnit {
                     }
                     list += '<li>' + result.testName + '<ul>';
                 }
-                list += '<li>' + result.funcName + '(): ' + result.message + '</li>';
+                list += '<li>' + result.funcName + '(): ' + this.htmlEscape(result.message) + '</li>';
             }
             return list + '</ul>';
+        }
+
+        private htmlEscape(str:string):string {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
         }
     }
 
     export class TestContext {
+
+        isNull(a: any): void {
+            if (a != null) {
+                throw 'isNull failed when passed non-null value ' +
+                    '{' + (typeof a) + '} "' + a + '"';
+            }
+        }
+
+        isUndefined(a: any): void {
+            if (a != undefined) {
+                throw 'isUndefined failed when passed non-null value ' +
+                    '{' + (typeof a) + '} "' + a + '"';
+            }
+        }
+
+        isNotNull(a: any): void {
+            if (a == null) {
+                throw 'isNotNull failed when passed null value';
+            }
+        }
+
+        isNotUndefined(a: any): void {
+            if (a == undefined) {
+                throw 'isUndefined failed when passed undefined value ' +
+                    '{' + (typeof a) + '} "' + a + '"';
+            }
+        }
+
         areIdentical(a: any, b: any): void {
             if (a !== b) {
                 throw 'areIdentical failed when passed ' +
@@ -92,6 +129,22 @@ module tsUnit {
         areNotIdentical(a: any, b: any): void {
             if (a === b) {
                 throw 'areNotIdentical failed when passed ' +
+                    '{' + (typeof a) + '} "' + a + '" and ' +
+                    '{' + (typeof b) + '} "' + b + '"';
+            }
+        }
+
+        areEqual(a: any, b: any): void {
+            if (a != b) {
+                throw 'areEqual failed when passed ' +
+                    '{' + (typeof a) + '} "' + a + '" and ' +
+                    '{' + (typeof b) + '} "' + b + '"';
+            }
+        }
+
+        areNotEqual(a: any, b: any): void {
+            if (a == b) {
+                throw 'areNotEqual failed when passed ' +
                     '{' + (typeof a) + '} "' + a + '" and ' +
                     '{' + (typeof b) + '} "' + b + '"';
             }

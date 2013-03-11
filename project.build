@@ -32,37 +32,33 @@
   </target>
   
   <!-- Compile the code -->
-	<target name="compile" >
+  <target name="compile" >
 
     <exec program="tsc.exe">
-      <arg line="Code\src\jsBind.ts"/>
       <arg line="--declaration"/>
       <arg line="--comments"/>
-      <arg line="--target ES5"/>
       <arg line="--out Code\jsBind.js"/>
+      <arg line="Code\src\jsBind.ts"/>
     </exec>
 
     <copy file="Code\jsBind.d.ts" tofile="Code\examples\jsBind.d.ts"/>
 
     <exec program="tsc.exe">
-      <arg line="Code\examples\calc.ts"/>
       <arg line="--comments"/>
-      <arg line="--target ES5"/>
       <arg line="--out Code\examples\js\calc.js"/>
+      <arg line="Code\examples\calc.ts"/>
     </exec>
 
     <exec program="tsc.exe">
-      <arg line="Code\examples\clock.ts"/>
       <arg line="--comments"/>
-      <arg line="--target ES5"/>
       <arg line="--out Code\examples\js\clock.js"/>
+      <arg line="Code\examples\clock.ts"/>
     </exec>
 
     <exec program="tsc.exe">
-      <arg line="Code\examples\tableDemo.ts"/>
       <arg line="--comments"/>
-      <arg line="--target ES5"/>
       <arg line="--out Code\examples\js\tableDemo.js"/>
+      <arg line="Code\examples\tableDemo.ts"/>
     </exec>
   </target>
   
@@ -109,14 +105,14 @@
         <include name="Code\**/*.css"/>
         <include name="Code\**/*.png"/>
         <include name="Code\**/*.html"/>
-	<include name="Build.cmd" />
-	<include name="Clean.cmd" />
-	<include name="project.build" />
-	<include name="Readme.txt" />
-	<include name="MIT-LICENSE.txt" />
-<exclude name="Code\jsBind.ts"/>
-<exclude name="Code\jsBind.d.ts"/>
-<exclude name="Code\examples\jsBind.d.ts"/>
+        <include name="Build.cmd" />
+        <include name="Clean.cmd" />
+        <include name="project.build" />
+        <include name="Readme.txt" />
+        <include name="MIT-LICENSE.txt" />
+        <exclude name="Code\jsBind.ts"/>
+        <exclude name="Code\jsBind.d.ts"/>
+        <exclude name="Code\examples\jsBind.d.ts"/>
       </fileset>
     </zip>
     

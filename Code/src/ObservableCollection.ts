@@ -19,12 +19,13 @@ module jsBind {
      */
     export class ObservableCollection implements IObservableCollection {
         private _changeDelegates: CollectionChangeDelegate[];
-        private _items: any[] = [];
+        private _items: any[];
 
         /**
          * Intialises a new instance of the ObservableCollection class
          */
-        constructor() {
+        constructor(items: any[] = []) {
+            this._items = items;
         }
 
         /**
@@ -176,16 +177,16 @@ module jsBind {
         }
 
         /**
-         * Adds and or removes elements from the collection.
+         * Adds and or removes elements from the collection.  Returns an array of the removed items.
          */
         public splice(start: number, deleteCount: number, ...items: any[]): any[] {
             var is = this._items;
 
             var removedItems = is.splice(start, deleteCount);
 
-            var idx = items.length - 1;
+            var idx = start;
             for (var i = 0; i < items.length; i++) {
-                is.push(items[i]);
+                is.splice(idx + i, 0, items[i]);
             }
 
             this.onCollectionChange(items, idx, [], -1, removedItems, start);
@@ -204,7 +205,7 @@ module jsBind {
         /*public unshift(...items:any[]): number {
             var length = this._items.unshift(items);
     
-            this.onCollectionChange(items, [], []);
+            this.onCollectionChange(items, 0, [], -1, [], -1);
     
             return length;
         }*/

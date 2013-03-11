@@ -1,21 +1,24 @@
-///<reference path="Expression.ts"/>
+///<reference path="IExpression.ts"/>
 
 module jsBind {
-    export class BinaryOperatorExpression extends Expression {
-        private _lhs: Expression;
-        private _rhs: Expression;
+    export class BinaryOperatorExpression implements IExpression {
+        private _lhs: IExpression;
+        private _rhs: IExpression;
         private _op: string;
         
         private _lhsValue: any;
         private _rhsValue: any;
         private _changeFunc: any;
 
-        constructor(lhs: any, op: string, rhs: Expression) {
-            super();
-
+        constructor(lhs: IExpression, op: string, rhs: IExpression) {
             this._lhs = lhs;
             this._op = op;
             this._rhs = rhs;
+        }
+
+        public dispose(): void {
+            this._lhs.dispose();
+            this._rhs.dispose();
         }
 
         private handleLhsChange(v: any): void {
@@ -43,7 +46,7 @@ module jsBind {
             }
 
             this._lhsValue = this._lhs.eval(lhsChange, d, p, e);
-            this._rhsValue = this._rhs.eval(rhsChange, d, p, e)
+            this._rhsValue = this._rhs.eval(rhsChange, d, p, e);
 
             return this.doEval();
         }
@@ -71,13 +74,13 @@ module jsBind {
                 case "==":
                     return lhsValue == rhsValue;
 
-                case "===^":
+                case "===":
                     return lhsValue === rhsValue;
 
                 case "!=":
                     return lhsValue != rhsValue;
 
-                case "!===":
+                case "!==":
                     return lhsValue !== rhsValue;
 
                 case "<":

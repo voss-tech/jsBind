@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-	<title>jsBind · Table Example</title>
+	<title>jsBind Â· Table Example</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content=""/>
     <meta name="author" content="Ben Voss"/>
@@ -46,7 +46,7 @@
                     <td>Amount</td>
                     <td></td>
                 </thead>
-                <tbody data-jsBind="forEach $d.items">
+                <tbody data-jsBind="forEach=$d.items">
                 <tr>
                     <td data-jsBind="prop:innerText=$d.value"></td>
                     <td data-jsBind="prop:innerText=$d.amount; prop:style.color=($d.amount < 0 ? 'rgb(255,0,0)' : 'rgb(0,255,0)')"></td>

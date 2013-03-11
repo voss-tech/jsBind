@@ -1,19 +1,21 @@
-/// <reference path="Expression.ts" />
+/// <reference path="IExpression.ts" />
 
 module jsBind {
 
-    export class ArrayExpression extends Expression {
-        private _args: Expression[];
+    export class ArrayExpression implements IExpression {
+        private _args: IExpression[];
         private _argsValues: any[] = [];
-        private _changeFunc: any;
+        private _changeFunc: (x:any) => void;
 
-        constructor(args: Expression[]) {
-            super();
-
+        constructor(args: IExpression[]) {
             this._args = args;
         }
 
-        public eval(changeFunc: any, d: any, p: any, e: any): any {
+        public dispose(): void {
+            this._args.forEach((v, i, a) => { v.dispose() });
+        }
+
+        public eval(changeFunc: (x:any) => void, d: any, p: any, e: any): any {
             var argsChange = [];
 
             if (changeFunc != null) {
@@ -22,8 +24,9 @@ module jsBind {
                 var args = this._args;
                 var argsLen = this._args.length;
                 for (var i = 0; i < argsLen; i++) {
-                    // Todo - check what happens to the modified closure here.
-                    argsChange.push((v) => this.handleArgChange(i, v));
+                    // i is modified outside the closure so we pull it in with ii
+                    var ii = i;
+                    argsChange.push((v) => this.handleArgChange(ii, v));
                 }
             }
 
@@ -33,6 +36,8 @@ module jsBind {
             for (var i = 0; i < argsLen; i++) {
                 this._argsValues.push(args[i].eval(argsChange[i], d, p, e));
             }
+
+            return this.doEval();
         }
 
         private handleArgChange(i: number, v: any): void {

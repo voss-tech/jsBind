@@ -1,17 +1,17 @@
-/// <reference path="Expression.ts"/>
+/// <reference path="IExpression.ts"/>
 
 module jsBind {
 
-    export class ConditionExpression extends Expression {
-        private _cond: Expression;
-        private _trueExpr: Expression;
-        private _falseExpr: Expression;
+    export class ConditionExpression implements IExpression {
+        private _cond: IExpression;
+        private _trueExpr: IExpression;
+        private _falseExpr: IExpression;
 
         private _condValue: any;
         private _trueValue: any;
         private _falseValue: any;
 
-        private _changeFunc: any;
+        private _changeFunc: (x:any) => void;
 
         private _flag: bool = false;
 
@@ -19,12 +19,16 @@ module jsBind {
         private _p: any;
         private _e: any;
 
-        constructor(cond: Expression, trueExpr: Expression, falseExpr: Expression) {
-            super();
-            
+        constructor(cond: IExpression, trueExpr: IExpression, falseExpr: IExpression) {
             this._cond = cond;
             this._trueExpr = trueExpr;
             this._falseExpr = falseExpr;
+        }
+
+        public dispose(): void {
+            this._cond.dispose();
+            this._trueExpr.dispose();
+            this._falseExpr.dispose();
         }
 
         private handleCondChange(v: any): void {
@@ -50,7 +54,9 @@ module jsBind {
             if (this._trueValue != v) {
                 this._trueValue = v;
 
-                this._changeFunc(this.doEval());
+                if (this._condValue) {
+                    this._changeFunc(this._trueValue);
+                }
             }
         }
 
@@ -58,7 +64,9 @@ module jsBind {
             if (this._falseValue != v) {
                 this._falseValue = v;
 
-                this._changeFunc(this.doEval());
+                if (!this._condValue) {
+	            this._changeFunc(this._falseValue);
+                }
             }
         }
 
@@ -69,6 +77,7 @@ module jsBind {
             var falseChange = null;
 
             if (changeFunc != null) {
+                this._changeFunc = changeFunc;
                 condChange = (v) => this.handleCondChange(v);
                 trueChange = (v) => this.handleTrueChange(v);
                 falseChange = (v) => this.handleFalseChange(v);

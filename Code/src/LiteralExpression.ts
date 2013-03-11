@@ -1,13 +1,14 @@
-/// <reference path="Expression.ts" />
+/// <reference path="IExpression.ts" />
 
 module jsBind {
-    export class LiteralExpression extends Expression {
+    export class LiteralExpression implements IExpression {
         private _value: any;
 
         constructor(value: any) {
-            super();
-
             this._value = value;
+        }
+
+        public dispose(): void {
         }
 
         public eval(changeFunc: any, d: any, p: any, e: any): any {

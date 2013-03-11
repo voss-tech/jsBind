@@ -1,32 +1,39 @@
-/// <reference path="Expression.ts" />
+/// <reference path="IExpression.ts" />
 
 module jsBind {
 
-    export class ArrayIndexExpression extends Expression {
-        private _left: Expression;
-        private _index: Expression;
+    export class ArrayIndexExpression implements IExpression {
+        private _left: IExpression;
+        private _index: IExpression;
 
         private _leftValue: any;
         private _indexValue: any;
         private _changeFunc: any;
 
-        constructor(left: Expression, index: Expression) {
-            super();
-
+        constructor(left: IExpression, index: IExpression) {
             this._left = left;
             this._index = index;
         }
 
-        private handleLeftChange(v: any): void {
-            this._leftValue = v;
+        public dispose(): void {
+            this._left.dispose();
+            this._index.dispose();
+        }
 
-            this._changeFunc(this.doEval());
+        private handleLeftChange(v: any): void {
+            if (this._leftValue != v) {
+                this._leftValue = v;
+
+                this._changeFunc(this.doEval());
+            }
         }
 
         private handleIndexChange(v: any): void {
-            this._indexValue = v;
+            if (this._indexValue != v) {
+                this._indexValue = v;
 
-            this._changeFunc(this.doEval());
+                this._changeFunc(this.doEval());
+            }
         }
 
         public eval(changeFunc: any, d: any, p: any, e: any): any {
@@ -37,14 +44,14 @@ module jsBind {
             if (changeFunc != null) {
                 this._changeFunc = changeFunc;
 
-                leftChange = (v) => this.handleIndexChange(v);
+                leftChange = (v) => this.handleLeftChange(v);
                 indexChange = (v) => this.handleIndexChange(v);
             }
 
             this._leftValue = this._left.eval(leftChange, d, p, e);
             this._indexValue = this._index.eval(indexChange, d, p, e);
 
-            this.doEval();
+            return this.doEval();
         }
 
         private doEval(): any {

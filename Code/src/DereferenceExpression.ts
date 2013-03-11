@@ -1,20 +1,28 @@
-/// <reference path="Expression.ts" />
+/// <reference path="IExpression.ts" />
 
 module jsBind {
 
-    export class DereferenceExpression extends Expression {
-        private _target: Expression;
+    export class DereferenceExpression implements IExpression {
+        private _target: IExpression;
         private _name: string;
         private _currentObj: any = null;
 
         private _value: any;
         private _changeFunc: any;
 
-        constructor(target: Expression, name: string) {
-            super();
+	private _del;
 
+        constructor(target: IExpression, name: string) {
             this._target = target;
             this._name = name;
+        }
+
+        public dispose(): void {
+            this._target.dispose();
+
+            if ((this._currentObj != null) && (this._currentObj.removeObserver)) {
+                this._currentObj.removeObserver(this._del);
+            }
         }
 
         private handleChange(v: any): void {
@@ -27,6 +35,8 @@ module jsBind {
 
         public eval(changeFunc: any, d: any, p: any, e: any): any {
             var change = null;
+
+            this._del = (p) => this.handleObjChange(p);
 
             if (changeFunc != null) {
                 this._changeFunc = changeFunc;
@@ -45,31 +55,28 @@ module jsBind {
 
             if ((this._changeFunc != null) && (this._currentObj != obj)) {
                 if ((this._currentObj != null) && (this._currentObj.removeObserver)) {
-                    this._currentObj.removeObserver((p) => this.handleObjChange(p));
+                    this._currentObj.removeObserver(this._del);
                 }
 
                 this._currentObj = obj;
 
                 if (this._currentObj.addObserver) {
-                    this._currentObj.addObserver((p) => this.handleObjChange(p));
+                    this._currentObj.addObserver(this._del);
                 }
             }
 
-            // Return a function that will do the invoke when called with the argument values.
             var member = obj[this._name];
             
-            if (member == undefined) {
-                throw "Unable to find a member called '" + this._name + "'.";
-            }
-
             if (typeof (member) == "function") {
                 // For a function we return a function that will do the invoke when called with the argument
-                // values.  This is neccessary because the parent expression will supply the arguments.
+                // values.  This is necessary because the parent expression will supply the arguments.
                 return (args) => { return member.apply(obj, args); }
             } else {
-                // For a variable we return the variables value
+                // For a variable we return the variables value.  If the member is undefined assume its a variable
+                // and return undefined as well. 
                 return member;
-            };
+            }
+
         }
 
         private handleObjChange(memberName: string) {
