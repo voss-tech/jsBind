@@ -60,6 +60,18 @@
       <arg line="--out Code\examples\js\tableDemo.js"/>
       <arg line="Code\examples\tableDemo.ts"/>
     </exec>
+
+    <exec program="tsc.exe">
+      <arg line="--comments"/>
+      <arg line="--out Code\examples\js\tabs.js"/>
+      <arg line="Code\examples\tabs.ts"/>
+    </exec>
+    
+    <exec program="tsc.exe">
+      <arg line="--comments"/>
+      <arg line="--out Code\tests.js"/>
+      <arg line="Code\tests\tests.ts"/>
+    </exec>
   </target>
   
   <!-- Minify-->
