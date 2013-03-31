@@ -36,7 +36,7 @@ module jsBind {
         private setup(node: Node, dataContext: any, parentContext: any) {
             var childNodesBound = false;
 
-        if (node instanceof HTMLElement) {
+            if (node instanceof HTMLElement) {
                 var element = <HTMLElement> node;
 
                 if (element.hasAttribute("data-jsBind")) {
@@ -55,8 +55,8 @@ module jsBind {
             }
         }
 
-        private expectToken(category: SymbolCategory, name: string): Symbol {
-            if (!(this._sym.category == category) && (this._sym.name == name)) {
+        private expectToken(category: TokenCategory, name: string): Token {
+            if (!(this._tok.category == category) && (this._tok.value == name)) {
                 throw "Expected '" + name + "' at position " + this._pos + " while parsing '" + this._expr + "'.";
             }
 
@@ -64,11 +64,11 @@ module jsBind {
         }
 
         private matchIdentifier(): string {
-            if (this._sym.category != SymbolCategory.identifier) {
+            if (this._tok.category != TokenCategory.identifier) {
                 throw "Expected identifier at position " + this._pos + " while parsing '" + this._expr + "'.";
             }
 
-            var name = this._sym.name;
+            var name = this._tok.value;
 
             this.getToken();
 
@@ -88,24 +88,24 @@ module jsBind {
             var forEach;
             var propsAndEvents:IBinding[] = [];
 
-            while (this._sym.category != SymbolCategory.eof) {
+            while (this._tok.category != TokenCategory.eof) {
 
                 var bindingType = this.matchIdentifier();
 
                 // Parse the bindings by keyword
                 switch (bindingType) {
                     case "prop": {
-                        this.expectToken(SymbolCategory.punctuation, ":");
+                        this.expectToken(TokenCategory.punctuation, ":");
 
                         var propParts: string[] = [];
                         propParts.push(this.matchIdentifier());
-                        while ((this._sym.category == SymbolCategory.punctuation) && (this._sym.name == ".")) {
+                        while ((this._tok.category == TokenCategory.punctuation) && (this._tok.value == ".")) {
                             this.getToken();
 
                             propParts.push(this.matchIdentifier());
                         }
 
-                        this.expectToken(SymbolCategory.operator, "=");
+                        this.expectToken(TokenCategory.operator, "=");
 
                         var prop = new PropBinding(element, propParts, this.parseExpression(), dataContext, parentContext);
                         propsAndEvents.push(prop);
@@ -114,7 +114,7 @@ module jsBind {
                     }
 
                     case "forEach": {
-                        this.expectToken(SymbolCategory.operator, "=");
+                        this.expectToken(TokenCategory.operator, "=");
 
                         forEach = new ForEachBinding(element, this.parseExpression(), dataContext, parentContext);
 
@@ -124,11 +124,11 @@ module jsBind {
                     }
 
                     case "event": {
-                        this.expectToken(SymbolCategory.punctuation, ":");
+                        this.expectToken(TokenCategory.punctuation, ":");
 
                         var eventName = this.matchIdentifier();
 
-                        this.expectToken(SymbolCategory.operator, "=");
+                        this.expectToken(TokenCategory.operator, "=");
 
                         var event = new EventBinding(element, eventName, this.parseExpression(), dataContext, parentContext);
                         propsAndEvents.push(event);
@@ -137,11 +137,11 @@ module jsBind {
                     }
 
                     case "template": {
-                        this.expectToken(SymbolCategory.punctuation, ":");
+                        this.expectToken(TokenCategory.punctuation, ":");
 
                         var templateSource = this.matchIdentifier();
 
-                        this.expectToken(SymbolCategory.operator, "=");
+                        this.expectToken(TokenCategory.operator, "=");
 
                         template = new TemplateBinding(element, templateSource, this.parseExpression(), dataContext, parentContext);
 
@@ -232,17 +232,6 @@ module jsBind {
             "!==",
             "?",
             "=",
-            "+=",
-            "-=",
-            "/=",
-            "*=",
-            "%=",
-            ">>=",
-            "<<=",
-            ">>>=",
-            "|=",
-            "^=",
-            "&=",
             "&&",
             "||"
         ];
@@ -251,7 +240,7 @@ module jsBind {
             return this.operators.indexOf(c) != -1;
         }
 
-        private parseOperatorToken(): Symbol {
+        private parseOperatorToken(): Token {
             var str = "";
             var c = this._ch;
             do {
@@ -259,7 +248,7 @@ module jsBind {
                 c = this.nextChar();
             } while (this.isOperator(str + c));
 
-            return new Symbol(str, SymbolCategory.operator);
+            return new Token(str, TokenCategory.operator);
         }
 
         private isPunctuation(c: string): bool {
@@ -288,14 +277,14 @@ module jsBind {
                         c = this.nextChar();
                     } while (this.isHexDigit(c));
 
-                    return new Symbol(parseInt(num, 8), SymbolCategory.literalNumber);
+                    return new Token(parseInt(num, 8), TokenCategory.literalNumber);
                 } else if (this.isOctalDigit(c)) {
                     do {
                         num += c;
                         c = this.nextChar();
                     } while (this.isOctalDigit(c));
 
-                    return new Symbol(parseInt(num, 16), SymbolCategory.literalNumber);
+                    return new Token(parseInt(num, 16), TokenCategory.literalNumber);
                 }
             }
 
@@ -334,11 +323,11 @@ module jsBind {
             }
 
             if (num == ".") {
-                return new Symbol(".", SymbolCategory.punctuation);
+                return new Token(".", TokenCategory.punctuation);
             } else if (isFloat) {
-                return new Symbol(parseFloat(num), SymbolCategory.literalNumber);
+                return new Token(parseFloat(num), TokenCategory.literalNumber);
             } else {
-                return new Symbol(parseInt(num, 10), SymbolCategory.literalNumber);
+                return new Token(parseInt(num, 10), TokenCategory.literalNumber);
             }
         }
 
@@ -359,7 +348,7 @@ module jsBind {
             }
             this.nextChar();
 
-            return new Symbol(str, SymbolCategory.literalString);
+            return new Token(str, TokenCategory.literalString);
         }
 
         private parseIdentifier() : string {
@@ -373,12 +362,12 @@ module jsBind {
             return this._expr.substring(start, this._pos - 1);
         }
 
-        private getToken(): Symbol {
-            this._sym = this.parseToken();
-            return this._sym;
+        private getToken(): Token {
+            this._tok = this.parseToken();
+            return this._tok;
         }
 
-        private parseToken(): Symbol {
+        private parseToken(): Token {
             var c = this._ch;
 
             // Skip whitespace
@@ -393,17 +382,17 @@ module jsBind {
             } else if (this.isLetter(c) || c == "_" || c == "$") {
                 var identifier = this.parseIdentifier();
                 if (this.isKeyword(identifier)) {
-                    return new Symbol(identifier, SymbolCategory.keyword);
+                    return new Token(identifier, TokenCategory.keyword);
                 } else {
-                    return new Symbol(identifier, SymbolCategory.identifier);
+                    return new Token(identifier, TokenCategory.identifier);
                 }
             } else if (c == "\x00") {
-                return new Symbol("", SymbolCategory.eof);
+                return new Token("", TokenCategory.eof);
             } else if (this.isOperator(c)) {
                 return this.parseOperatorToken();
             } else if (this.isPunctuation(c)) {
                 this.nextChar();
-                return new Symbol(c, SymbolCategory.punctuation);
+                return new Token(c, TokenCategory.punctuation);
             }
 
             throw("Unknown token '" + c + "' at position " + this._pos + " while parsing '" + this._expr + "'.");
@@ -438,16 +427,16 @@ module jsBind {
             return Binder.operatorPrecidences[op];
         }
 
-        private _sym: Symbol;
+        private _tok: Token;
 
         private parseExpression(): IExpression {
             var cond = this.parseOperators();
 
-            if ((this._sym.category == SymbolCategory.operator) && (this._sym.name == "?")) {
+            if ((this._tok.category == TokenCategory.operator) && (this._tok.value == "?")) {
                 this.getToken();
                 var trueExpr = this.parseExpression();
 
-                this.expectToken(SymbolCategory.punctuation, ":");
+                this.expectToken(TokenCategory.punctuation, ":");
 
                 var falseExpr = this.parseExpression();
 
@@ -462,8 +451,8 @@ module jsBind {
         }
 
         private parseUnaryOperators(): IExpression {
-            if ((this._sym.category == SymbolCategory.operator) && this.isUnaryPrefix(this._sym.name)) {
-                var op = this._sym.name;
+            if ((this._tok.category == TokenCategory.operator) && this.isUnaryPrefix(this._tok.value)) {
+                var op = this._tok.value;
                 this.getToken();
 
                 return new PreUnaryOperatorExpression(op, this.parseUnaryOperators());
@@ -474,7 +463,7 @@ module jsBind {
 
         private parseOperator(left: IExpression, minPrecidence: number): IExpression {
 
-            var op = this._sym.name;
+            var op = this._tok.value;
 
             var prec = this.getOperatorPrecidence(op);
             if (prec > minPrecidence) {
@@ -488,10 +477,10 @@ module jsBind {
         }
 
         private parseAtom(): IExpression {
-            var name = this._sym.name;
+            var name = this._tok.value;
 
-            switch (this._sym.category) {
-                case SymbolCategory.punctuation: {
+            switch (this._tok.category) {
+                case TokenCategory.punctuation: {
                     if (name == "[") {
                         this.getToken();
                         return this.parseSubscripts(new ArrayExpression(this.parseExpressionList("]")));
@@ -506,39 +495,39 @@ module jsBind {
                     break;
                 }
 
-                case SymbolCategory.literalNumber: {
+                case TokenCategory.literalNumber: {
                     this.getToken();
                     return this.parseSubscripts(new LiteralExpression(name));
                 }
 
-                case SymbolCategory.literalString: {
+                case TokenCategory.literalString: {
                     this.getToken();
                     return this.parseSubscripts(new LiteralExpression(name));
                 }
 
-                case SymbolCategory.identifier: {
+                case TokenCategory.identifier: {
                     this.getToken();
                     return this.parseSubscripts(new VariableReferenceExpression(name));
                 }
 
-                case SymbolCategory.keyword: {
+                case TokenCategory.keyword: {
                     this.getToken();
                     return this.parseSubscripts(new KeywordExpression(name));
                 }
             }
 
-            throw "Unexpected symbol '" + name + "' while parsing " + this._expr;
+            throw "Unexpected token '" + name + "' while parsing " + this._expr;
         }
 
         private parseSubscripts(left: IExpression): IExpression {
-            var type = this._sym.name;
+            var type = this._tok.value;
 
             if (type == ".") {
                 // Dereference
                 var sym = this.getToken();
                 this.getToken();
 
-                return this.parseSubscripts(new DereferenceExpression(left, sym.name));
+                return this.parseSubscripts(new DereferenceExpression(left, sym.value));
             } else if (type == "[") {
                 // Array index
                 this.getToken();
@@ -561,7 +550,7 @@ module jsBind {
         private parseExpressionList(endChar: string): IExpression[] {
             var args: IExpression[] = [];
 
-            if (this._sym.name == endChar) {
+            if (this._tok.value == endChar) {
                this.getToken();
                return args;
             }
@@ -570,10 +559,10 @@ module jsBind {
                 args.push(this.parseExpression());
 
                 // Consume the comma
-                if (this._sym.name == ",") {
-                    this._sym = this.getToken();
+                if (this._tok.value == ",") {
+                    this._tok = this.getToken();
                 } else {
-                    this.expectToken(SymbolCategory.punctuation, endChar);
+                    this.expectToken(TokenCategory.punctuation, endChar);
 
                     return args;
                 }
@@ -583,7 +572,7 @@ module jsBind {
 //#endregion
     }
 
-    export enum SymbolCategory {
+    export enum TokenCategory {
         operator,
         literalString,
         literalNumber,
@@ -593,12 +582,12 @@ module jsBind {
         punctuation
     }
 
-    export class Symbol {
-        public name: any;
-        public category: SymbolCategory;
+    export class Token {
+        public value: any;
+        public category: TokenCategory;
 
-        constructor(name: any, category: SymbolCategory) {
-            this.name = name;
+        constructor(value: any, category: TokenCategory) {
+            this.value = value;
             this.category = category;
         }
     }
