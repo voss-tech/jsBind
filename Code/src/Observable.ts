@@ -26,7 +26,7 @@ module jsBind {
      * members.
      */
     export interface ChangeDelegate {
-        (property: string): void;
+        (memberName: string): void;
     }
 
     /**
@@ -44,7 +44,7 @@ module jsBind {
          * @param delegate Function that will be invoked when the value changes.
          */
         public addObserver(delegate: ChangeDelegate): void {
-            // Null delegates are ignored.
+            // Null/undefined delegates are ignored.
             if (delegate == null) {
                 return;
             }
@@ -63,14 +63,21 @@ module jsBind {
          * @param delegate Previously registered change handler function.
          */
         public removeObserver(delegate: ChangeDelegate): void {
+            // Ignore if the delegate is null/undefined
             var delegates = this._changeDelegates;
             if (delegates == null) {
                 return;
             }
 
+            // Remove the delegate if we can find it.
             var index = delegates.indexOf(delegate);
             if (index > -1) {
                 delegates.splice(index, 1);
+
+                // Delete the empty list entirely
+                if (delegates.length == 0) {
+                    delete this._changeDelegates;
+                }
             }
         }
 

@@ -228,6 +228,12 @@ module jsBind {
          * Adds an observer function to invoke when the collection changes.
          */
         public addCollectionObserver(delegate: CollectionChangeDelegate): void {
+            // Null/undefined delegates are ignored.
+            if (delegate == null) {
+                return;
+            }
+
+            // Allocate storage if its not been needed until now.
             if (this._changeDelegates == null) {
                 this._changeDelegates = [];
             }
@@ -239,16 +245,20 @@ module jsBind {
          * Removes a previously added observer function so that it is no longer invoked when the collection changes.
          */
         public removeCollectionObserver(delegate: CollectionChangeDelegate): void {
+            // Ignore if the delegate is null/undefined
             var delegates = this._changeDelegates;
             if (delegates == null) {
                 return;
             }
 
+            // Remove the delegate if we can find it.
             var index = delegates.indexOf(delegate);
             if (index > -1) {
                 delegates.splice(index, 1);
+
+                // Delete the empty list entirely
                 if (delegates.length == 0) {
-                    this._changeDelegates = null;
+                    delete this._changeDelegates;
                 }
             }
         }
