@@ -10,7 +10,7 @@ module jsBind {
         private _value: any;
         private _changeFunc: any;
 
-	private _del;
+        private _del;
 
         constructor(target: IExpression, name: string) {
             this._target = target;
