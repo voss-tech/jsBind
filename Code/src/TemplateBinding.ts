@@ -81,7 +81,11 @@ module jsBind {
             }
 
             // Make the template the one and only child of the element context
-            this._element.innerHTML = "";
+            // IE doesnt like this when its done to a table...
+            //            this._element.innerHTML = "";
+            while (this._element.hasChildNodes())
+                this._element.removeChild(this._element.firstChild);
+
             this._element.appendChild(this._template);
 
             // Apply bindings on the child elements.

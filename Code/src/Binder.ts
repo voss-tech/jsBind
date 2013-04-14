@@ -36,12 +36,16 @@ module jsBind {
         private setup(node: Node, dataContext: any, parentContext: any) {
             var childNodesBound = false;
 
-            if (node instanceof HTMLElement) {
+            //if (node instanceof HTMLElement) {
+            // IE Versions less than 9 dont know what the HTMLElement type is.
+            // Looking for the existance of the nodeType property is a good
+            // enough for our purposes.
+            if (node.nodeType === 1) {
                 var element = <HTMLElement> node;
 
-                if (element.hasAttribute("data-jsBind")) {
-                    var bindExpr = element.getAttribute("data-jsBind");
-
+                //if (element.hasAttribute("data-jsBind")) {
+                var bindExpr = element.getAttribute("data-jsBind");
+                if (bindExpr) {
                     childNodesBound = this.parseBindings(bindExpr, element, dataContext, parentContext);
                 }
             }
@@ -182,7 +186,7 @@ module jsBind {
             if (this._pos >= this._len) {
                 this._ch = "\x00";
             } else {
-                this._ch = this._expr[this._pos];
+                this._ch = this._expr.charAt(this._pos);
             }
             this._pos++;
             return this._ch;
@@ -395,7 +399,7 @@ module jsBind {
                 return new Token(c, TokenCategory.punctuation);
             }
 
-            throw("Unknown token '" + c + "' at position " + this._pos + " while parsing '" + this._expr + "'.");
+            throw ("Unknown token '" + c + "' at position " + this._pos + " while parsing '" + this._expr + "'.");
         }
 
 //#endregion

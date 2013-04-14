@@ -64,7 +64,11 @@ module jsBind {
 
             // Clear any existing items
             this.clearBinders();
-            this._element.innerHTML = "";
+
+            // IE doesnt like this when its done to a table...
+            //            this._element.innerHTML = "";
+            while (this._element.hasChildNodes())
+                this._element.removeChild(this._element.firstChild);
 
             // If we have an observable collection hook the change notification
             if (result instanceof ObservableCollection) {
