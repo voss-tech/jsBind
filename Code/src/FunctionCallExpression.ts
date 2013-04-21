@@ -16,7 +16,7 @@ module jsBind {
 
         public dispose(): void {
             this._identifier.dispose();
-            this._args.forEach((v, i, a) => {v.dispose()});
+            this._args.forEach((v, i, a) => { v.dispose() });
         }
 
         private handleIdentifierChange(v: any): void {

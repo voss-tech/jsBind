@@ -8,10 +8,10 @@ module jsBind {
     export class ObservableBool extends Observable implements IObservable {
         private _value: bool = false;
 
-	constructor(value: bool = false) {
+        constructor(value: bool = false) {
             super();
             this._value = value;
-	}
+        }
 
         /**
          * Gets the bool value.

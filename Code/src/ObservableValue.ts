@@ -8,11 +8,11 @@ module jsBind {
     export class ObservableValue extends Observable implements IObservable {
         private _value: any = null;
 
-	constructor(value: any = null) {
+        constructor(value: any = null) {
             super();
 
             this._value = value;
-	}
+        }
 
         /**
          * Gets the object value.
