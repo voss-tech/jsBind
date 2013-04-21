@@ -66,8 +66,8 @@ module jsBind {
             }
 
             var member = obj[this._name];
-            
-            if (typeof (member) == "function") {
+
+            if (typeof (member) === "function") {
                 // For a function we return a function that will do the invoke when called with the argument
                 // values.  This is necessary because the parent expression will supply the arguments.
                 return (args) => { return member.apply(obj, args); }
@@ -76,7 +76,6 @@ module jsBind {
                 // and return undefined as well. 
                 return member;
             }
-
         }
 
         private handleObjChange(memberName: string) {
