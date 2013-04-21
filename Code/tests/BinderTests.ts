@@ -198,7 +198,7 @@ module jsBind {
                 // expression statement
                 ["x;", "1 expression statement"],
                 ["5;", "2 expression statement"],
-                ["1+2;", "3 expression statement"],
+                ["1+2;", "3 expression statement"]
                 
             ];
 

@@ -16,7 +16,15 @@ module jsBind {
 
             binding.evaluate();
 
-            c.areIdentical("<p data-jsbind=\"prop:innerText=$d\">1</p><p data-jsbind=\"prop:innerText=$d\">2</p><p data-jsbind=\"prop:innerText=$d\">3</p>", elem.innerHTML);
+            // We compare against a lower case string content because different browsers use different case ruels (IE8 uses upper case <p> tags)
+            var str: string = elem.innerHTML;
+            str = str.toLowerCase();
+
+            // IE 8 adds new lines between the p tags
+            str = str.replace(">\r\n<", "><");
+            str = str.replace(">\r\n<", "><");
+
+            c.areIdentical("<p data-jsbind=\"prop:innertext=$d\">1</p><p data-jsbind=\"prop:innertext=$d\">2</p><p data-jsbind=\"prop:innertext=$d\">3</p>", str);
         }
 
         public testEvaluateChange(c: tsUnit.TestContext): void {
@@ -30,7 +38,14 @@ module jsBind {
 
             expr.raiseChange([4,5]);
 
-            c.areIdentical("<p data-jsbind=\"prop:innerText=$d\">4</p><p data-jsbind=\"prop:innerText=$d\">5</p>", elem.innerHTML);
+            // We compare against a lower case string content because different browsers use different case ruels (IE8 uses upper case <p> tags)
+            var str: string = elem.innerHTML;
+            str = str.toLowerCase();
+
+            // IE 8 adds new lines between the p tags
+            str = str.replace(">\r\n<", "><");
+
+            c.areIdentical("<p data-jsbind=\"prop:innertext=$d\">4</p><p data-jsbind=\"prop:innertext=$d\">5</p>", str);
         }
 
         public testEvaluateObservableCollection(c: tsUnit.TestContext): void {
@@ -42,7 +57,15 @@ module jsBind {
 
             binding.evaluate();
 
-            c.areIdentical("<p data-jsbind=\"prop:innerText=$d\">1</p><p data-jsbind=\"prop:innerText=$d\">2</p><p data-jsbind=\"prop:innerText=$d\">3</p>", elem.innerHTML);
+            // We compare against a lower case string content because different browsers use different case ruels (IE8 uses upper case <p> tags)
+            var str: string = elem.innerHTML;
+            str = str.toLowerCase();
+
+            // IE 8 adds new lines between the p tags
+            str = str.replace(">\r\n<", "><");
+            str = str.replace(">\r\n<", "><");
+
+            c.areIdentical("<p data-jsbind=\"prop:innertext=$d\">1</p><p data-jsbind=\"prop:innertext=$d\">2</p><p data-jsbind=\"prop:innertext=$d\">3</p>", str);
         }
 
         public testEvaluateObservableCollectionInsert(c: tsUnit.TestContext): void {
@@ -57,7 +80,15 @@ module jsBind {
 
             coll.splice(1,0,[2]);
 
-            c.areIdentical("<p data-jsbind=\"prop:innerText=$d\">1</p><p data-jsbind=\"prop:innerText=$d\">2</p><p data-jsbind=\"prop:innerText=$d\">3</p>", elem.innerHTML);
+            // We compare against a lower case string content because different browsers use different case ruels (IE8 uses upper case <p> tags)
+            var str: string = elem.innerHTML;
+            str = str.toLowerCase();
+
+            // IE 8 adds new lines between the p tags
+            str = str.replace(">\r\n<", "><");
+            str = str.replace(">\r\n<", "><");
+
+            c.areIdentical("<p data-jsbind=\"prop:innertext=$d\">1</p><p data-jsbind=\"prop:innertext=$d\">2</p><p data-jsbind=\"prop:innertext=$d\">3</p>", str);
         }
 
         public testEvaluateObservableCollectionDelete(c: tsUnit.TestContext): void {
@@ -72,7 +103,14 @@ module jsBind {
 
             coll.splice(1,1);
 
-            c.areIdentical("<p data-jsbind=\"prop:innerText=$d\">1</p><p data-jsbind=\"prop:innerText=$d\">3</p>", elem.innerHTML);
+            // We compare against a lower case string content because different browsers use different case ruels (IE8 uses upper case <p> tags)
+            var str: string = elem.innerHTML;
+            str = str.toLowerCase();
+
+            // IE 8 adds new lines between the p tags
+            str = str.replace(">\r\n<", "><");
+
+            c.areIdentical("<p data-jsbind=\"prop:innertext=$d\">1</p><p data-jsbind=\"prop:innertext=$d\">3</p>", str);
         }
 
         public testEvaluateObservableCollectionUpdate(c: tsUnit.TestContext): void {
@@ -87,7 +125,15 @@ module jsBind {
 
             coll.set(1,2);
 
-            c.areIdentical("<p data-jsbind=\"prop:innerText=$d\">1</p><p data-jsbind=\"prop:innerText=$d\">2</p><p data-jsbind=\"prop:innerText=$d\">3</p>", elem.innerHTML);
+            // We compare against a lower case string content because different browsers use different case ruels (IE8 uses upper case <p> tags)
+            var str:string = elem.innerHTML;
+            str = str.toLowerCase();
+
+            // IE 8 adds new lines between the p tags
+            str = str.replace(">\r\n<", "><");
+            str = str.replace(">\r\n<", "><");
+
+            c.areIdentical("<p data-jsbind=\"prop:innertext=$d\">1</p><p data-jsbind=\"prop:innertext=$d\">2</p><p data-jsbind=\"prop:innertext=$d\">3</p>", str);
         }
 
         public testDispose(c: tsUnit.TestContext): void {
@@ -101,7 +147,6 @@ module jsBind {
 
             c.isTrue(expr.isDisposed);
         }
-
         
     }
 }

@@ -26,7 +26,10 @@ module jsBind {
 
             binding.evaluate();
 
-            c.areIdentical("<p id=\"1\">1</p>", testElem.innerHTML);
+            // IE8 doesnt put quotes in the id tag
+            if (testElem.innerHTML != "<P id=1>1</P>") {
+                c.areIdentical("<p id=\"1\">1</p>", testElem.innerHTML);
+            }
 
             binding.dispose();
 
@@ -34,8 +37,11 @@ module jsBind {
 
             expr.raiseChange("2");
 
+            // IE8 doesnt put quotes in the id tag
+            if (testElem.innerHTML != "<P id=1>1</P>") {
+                c.areIdentical("<p id=\"1\">1</p>", testElem.innerHTML);
+            }
             dom.innerHTML = "";
-            c.areIdentical("<p id=\"1\">1</p>", testElem.innerHTML);
         }
 
         public testEvaluate(c: tsUnit.TestContext): void {
@@ -58,8 +64,11 @@ module jsBind {
 
             binding.evaluate();
 
+            // IE8 doesnt put quotes in the id tag
+            if (testElem.innerHTML != "<P id=1>1</P>") {
+                c.areIdentical("<p id=\"1\">1</p>", testElem.innerHTML);
+            }
             dom.innerHTML = "";
-            c.areIdentical("<p id=\"1\">1</p>", testElem.innerHTML);
         }
 
         public testChange(c: tsUnit.TestContext): void {
@@ -88,8 +97,11 @@ module jsBind {
 
             expr.raiseChange("2");
 
+            // IE8 doesnt put quotes in the id tag
+            if (testElem.innerHTML != "<P id=2>2</P>") {
+                c.areIdentical("<p id=\"2\">2</p>", testElem.innerHTML);
+            }
             dom.innerHTML = "";
-            c.areIdentical("<p id=\"2\">2</p>", testElem.innerHTML);
         }
 
         private getDom(): any 

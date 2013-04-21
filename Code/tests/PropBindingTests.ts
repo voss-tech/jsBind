@@ -84,7 +84,12 @@ module jsBind {
         }
 
         public testEvaluateBrowserPrefixStyle(c: tsUnit.TestContext): void {
-            var elem: any = document.createElement("div");            
+            var elem: any = document.createElement("div");
+
+            // IE 8- Doesnt use browser prefixes so we dont need this test
+            if (!elem.style.transform)
+                return;
+
             var path = ["style", "transform"];
             var expr = new MockExpression("rotate(90deg)");
             var dc = null;
@@ -109,7 +114,12 @@ module jsBind {
         }
 
         public testChangeBrowserPrefixStyle(c: tsUnit.TestContext): void {
-            var elem: any = document.createElement("div");            
+            var elem: any = document.createElement("div");
+
+            // IE 8- Doesnt use browser prefixes so we dont need this test
+            if (!elem.style.transform)
+                return;
+
             var path = ["style", "transform"];
             var expr = new MockExpression("rotate(90deg)");
             var dc = null;

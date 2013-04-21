@@ -1,4 +1,5 @@
 /// <reference path="tsUnit.ts" />
+/// <reference path="../src/jsBind.ts" />
 /// <reference path="BinderTests.ts" />
 
 /// <reference path="ArrayExpressionTests.ts" />
@@ -21,8 +22,13 @@
 /// <reference path="PropBindingTests.ts" />
 /// <reference path="TemplateBindingTests.ts" />
 
-window.addEventListener("load", () => {
+if (window.attachEvent) {
+    window.attachEvent("onload", () => testFixture());
+} else {
+    window.addEventListener("load", () => testFixture(), false);
+}
 
+function testFixture(): void {
     var test = new tsUnit.Test();
 
     test.addTestClass(new jsBind.ArrayExpressionTests(), "ArrayExpression");
@@ -49,6 +55,6 @@ window.addEventListener("load", () => {
     test.addTestClass(new jsBind.BinderTests(), "Binder");
 
     test.showResults(document.getElementById("Results"), test.run());
-}, false);
+}
 
 
