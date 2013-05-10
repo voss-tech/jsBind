@@ -77,16 +77,16 @@ module jsBind {
             return this._items.every(callbackfn, thisArg);
         }
 
-        public filter(callbackfn: (value: any, index: number, array: any[]) => bool, thisArg: any): any[] {
-            return this._items.filter(callbackfn, thisArg);
+        public filter(callbackfn: (value: any, index: number, array: any[]) => bool, thisArg: any): ObservableCollection {
+            return new ObservableCollection(this._items.filter(callbackfn, thisArg));
         }
 
-        public map(callbackfn: (value: any, index: number, array: any[]) => any, thisArg: any): any[] {
-            return this._items.map(callbackfn, thisArg);
+        public map(callbackfn: (value: any, index: number, array: any[]) => any, thisArg: any): ObservableCollection {
+            return new ObservableCollection(this._items.map(callbackfn, thisArg));
         }
 
-        public reduce(callbackfn: (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any, initialValue: any): any[] {
-            return this._items.reduce(callbackfn, initialValue);
+        public reduce(callbackfn: (previousValue: any, currentValue: any, currentIndex: number, array: any[]) => any, initialValue: any): ObservableCollection {
+            return new ObservableCollection(this._items.reduce(callbackfn, initialValue));
         }
 
         public some(callbackfn: (value: any, index: number, array: any[]) => any, thisArg: any): bool {
@@ -163,8 +163,8 @@ module jsBind {
         /**
          * Selects a part of a collection, and returns the items as a new array.
          */
-        public slice(number: number, end: number): any[] {
-            return this._items.slice(number, end);
+        public slice(number: number, end: number): ObservableCollection {
+            return new ObservableCollection(this._items.slice(number, end));
         }
 
         /**
@@ -179,7 +179,7 @@ module jsBind {
         /**
          * Adds and or removes elements from the collection.  Returns an array of the removed items.
          */
-        public splice(start: number, deleteCount: number, ...items: any[]): any[] {
+        public splice(start: number, deleteCount: number, ...items: any[]): ObservableCollection {
             var is = this._items;
 
             var removedItems = is.splice(start, deleteCount);
@@ -191,7 +191,7 @@ module jsBind {
 
             this.onCollectionChange(items, idx, [], -1, removedItems, start);
 
-            return removedItems;
+            return new ObservableCollection(removedItems);
         }
 
         /**
